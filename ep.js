@@ -149,7 +149,7 @@ function render() {
     var m = id;
     for (var i = 0; i < wings.length; i++) {
         var wing = wings[i];
-        m = m.translate(0, 0, wing.z_delta * 5);
+        m = m.translate(0, 0, wing.z_delta * window.innerHeight * 0.02);
         var lm = m.rotate(0, 0, wing.angle + i * wing.delta_angle).translate(wing.radius * 10, 0, 0).rotate(0, 0, -wing.yaw).rotate(0, -wing.pitch, 0).rotate(wing.roll, 0, 0);
         wing.element.style.webkitTransform = lm.toString();
     }
