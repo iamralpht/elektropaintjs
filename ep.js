@@ -128,7 +128,6 @@ var wings = [];
 var camera = document.createElement('div');
 camera.className = 'camera';
 document.body.appendChild(camera);
-var id = new WebKitCSSMatrix();
 
 for (var i = 0; i < 40; i++) {
     var wing = newWing();
@@ -146,16 +145,92 @@ function frame() {
 
 function render() {
     frame();
-    var m = id;
+    var m = id();
     for (var i = 0; i < wings.length; i++) {
         var wing = wings[i];
-        m = m.translate(0, 0, wing.z_delta * window.innerHeight * 0.02);
-        var lm = m.rotate(0, 0, wing.angle + i * wing.delta_angle).translate(wing.radius * 10, 0, 0).rotate(0, 0, -wing.yaw).rotate(0, -wing.pitch, 0).rotate(wing.roll, 0, 0);
-        wing.element.style.webkitTransform = lm.toString();
+
+        var lm = m = translate(m, 0, 0, wing.z_delta * window.innerHeight * 0.02);
+        
+        lm = rotate(lm, 0, 0, wing.angle + i * wing.delta_angle)
+        lm = translate(lm, wing.radius * 10, 0, 0)
+        lm = rotate(lm, 0, 0, -wing.yaw)
+        lm = rotate(lm, 0, -wing.pitch, 0)
+        lm = rotate(lm, wing.roll, 0, 0);
+
+        transform(wing.element, lm)
     }
     requestAnimationFrame(render);
 }
 
 render();
+
+function transform(el, m) {
+    el.style.MozTransform =
+    el.style.webkitTransform = "matrix3d(" + m.join(", ") + ")";
+}
+
+function id() {
+    return [ 1, 0, 0, 0,
+             0, 1, 0, 0,
+             0, 0, 1, 0,
+             0, 0, 0, 1 ];
+}
+
+function translate(m, x, y, z) {
+    return mult(m, id().slice(0, 12).concat([x, y, z, 1]))
+}
+
+function rotate(m, x, y, z) {
+    x *= Math.PI / 180;
+    y *= Math.PI / 180;
+    z *= Math.PI / 180;
+
+    var cosx =  Math.cos(x)
+      , sinx = -Math.sin(x);
+
+    var cosy =  Math.cos(y)
+      , siny = -Math.sin(y);
+
+    var cosz =  Math.cos(z)
+      , sinz = -Math.sin(z);
+
+    var rm = id()
+
+    rm[ 0] =  cosy * cosz;
+    rm[ 1] = -cosy * sinz;
+    rm[ 2] =  siny;
+
+    rm[ 4] =  sinx * siny * cosz + cosx * sinz;
+    rm[ 5] =  cosx * cosz - sinx * siny * sinz;
+    rm[ 6] = -sinx * cosy;
+
+    rm[ 8] = sinx * sinz - cosx * siny * cosz;
+    rm[ 9] = sinx * cosz + cosx * siny * sinz;
+    rm[10] = cosx * cosy;
+
+    return mult(m, rm);
+}
+
+function mult(m1, m2) {
+    return [ m2[ 0] * m1[ 0] + m2[ 1] * m1[ 4] + m2[ 2] * m1[ 8] + m2[ 3] * m1[12],
+             m2[ 0] * m1[ 1] + m2[ 1] * m1[ 5] + m2[ 2] * m1[ 9] + m2[ 3] * m1[13],
+             m2[ 0] * m1[ 2] + m2[ 1] * m1[ 6] + m2[ 2] * m1[10] + m2[ 3] * m1[14],
+             m2[ 0] * m1[ 3] + m2[ 1] * m1[ 7] + m2[ 2] * m1[11] + m2[ 3] * m1[15],
+             
+             m2[ 4] * m1[ 0] + m2[ 5] * m1[ 4] + m2[ 6] * m1[ 8] + m2[ 7] * m1[12],
+             m2[ 4] * m1[ 1] + m2[ 5] * m1[ 5] + m2[ 6] * m1[ 9] + m2[ 7] * m1[13],
+             m2[ 4] * m1[ 2] + m2[ 5] * m1[ 6] + m2[ 6] * m1[10] + m2[ 7] * m1[14],
+             m2[ 4] * m1[ 3] + m2[ 5] * m1[ 7] + m2[ 6] * m1[11] + m2[ 7] * m1[15],
+             
+             m2[ 8] * m1[ 0] + m2[ 9] * m1[ 4] + m2[10] * m1[ 8] + m2[11] * m1[12],
+             m2[ 8] * m1[ 1] + m2[ 9] * m1[ 5] + m2[10] * m1[ 9] + m2[11] * m1[13],
+             m2[ 8] * m1[ 2] + m2[ 9] * m1[ 6] + m2[10] * m1[10] + m2[11] * m1[14],
+             m2[ 8] * m1[ 3] + m2[ 9] * m1[ 7] + m2[10] * m1[11] + m2[11] * m1[15],
+
+             m2[12] * m1[ 0] + m2[13] * m1[ 4] + m2[14] * m1[ 8] + m2[15] * m1[12],
+             m2[12] * m1[ 1] + m2[13] * m1[ 5] + m2[14] * m1[ 9] + m2[15] * m1[13],
+             m2[12] * m1[ 2] + m2[13] * m1[ 6] + m2[14] * m1[10] + m2[15] * m1[14],
+             m2[12] * m1[ 3] + m2[13] * m1[ 7] + m2[14] * m1[11] + m2[15] * m1[15] ]
+}
 
 })()
