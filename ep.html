@@ -9,16 +9,17 @@ body {
 }
 .camera {
     pointer-events: none;
-    -webkit-transform: perspective(500) rotateX(45deg);
+    -webkit-transform: perspective(1000) rotateX(45deg);
     -webkit-transform-style: preserve-3d;
     position: absolute;
     width: 100%;
     height: 100%;
+    top: 25%;
 }
 .wing {
     -webkit-transform-style: preserve-3d;
     position: absolute;
-    left: 50%; top: 50%; width: 5%; height: 5%;
+    left: 50%; top: 50%; width: 5vmin; height: 5vmin;
     border: 1px solid white;
 }
 </style>
