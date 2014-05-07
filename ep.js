@@ -40,21 +40,25 @@ Color.prototype.toString = function() {
     return 'rgba(' + Math.round(this.red * 255) + ',' + Math.round(this.green * 255) + ',' + Math.round(this.blue * 255) + ',1.0)';
 }
 
-function Wing(spec) {
-    function get(name, def) { return (spec && spec.hasOwnProperty(name)) ? spec[name] : def; }
-    this.radius = get('radius', 10);
-    this.angle = get('angle', 0);
-    this.delta_angle = get('delta_angle', 15);
-    this.z_delta = get('z_delta', 0.5);
-    this.roll = get('roll', 0);
-    this.pitch = get('pitch', 0);
-    this.yaw = get('yaw', 0);
-    this.color = get('color', new Color());
-    this.edge_color = get('edge_color', new Color());
-    this.alpha = get('alpha', 1);
+function Wing() {
+    function get(spec, name, def) { return (spec && spec.hasOwnProperty(name)) ? spec[name] : def; }
+
+    this.update = function(spec) {
+        this.radius = get(spec, 'radius', 10);
+        this.angle = get(spec, 'angle', 0);
+        this.delta_angle = get(spec, 'delta_angle', 15);
+        this.z_delta = get(spec, 'z_delta', 0.5);
+        this.roll = get(spec, 'roll', 0);
+        this.pitch = get(spec, 'pitch', 0);
+        this.yaw = get(spec, 'yaw', 0);
+        this.color = get(spec, 'color', new Color());
+        this.edge_color = get(spec, 'edge_color', new Color());
+        this.alpha = get(spec, 'alpha', 1);
+        this.element.style.backgroundColor = this.color.toString();
+    }
+
     this.element = document.createElement('div');
     this.element.className = 'wing';
-    this.element.style.backgroundColor = this.color.toString();
 }
 
 function RandomGenerator(spec) {
@@ -111,8 +115,8 @@ var angle_change = RandomGenerator({min: 0, max: 360, stability: 120, wrap: true
 var delta_angle_change = RandomGenerator({min: 0, max: 360, stability: 80, wrap: true, max_speed: 0.1, max_acceleration: 0.01});
 var z_delta_change = RandomGenerator({min: 0.4, max: 0.7, stability: 200, wrap: false, max_speed: 0.005, max_acceleration: 0.0005});
 
-function newWing() {
-    return new Wing({
+function update(wing) {
+    wing.update({
             radius: radius_change(),
             angle: angle_change(),
             delta_angle: delta_angle_change(),
@@ -130,21 +134,32 @@ camera.className = 'camera';
 document.body.appendChild(camera);
 
 for (var i = 0; i < 40; i++) {
-    var wing = newWing();
+    var wing = new Wing;
+    update(wing);
     camera.appendChild(wing.element);
     wings.push(wing);
 }
 
-function frame() {
+function oldframe() {
     var old = wings.pop();
-    var next = newWing();
+    var next = new Wing;
+    update(next);
     camera.removeChild(old.element);
     camera.appendChild(next.element);
     wings.unshift(next);
 }
 
+function newframe() {
+    wings.unshift(wings.pop());
+    update(wings[0]);
+}
+
+var curr = 0;
+
 function render() {
-    frame();
+    // oldframe();
+    newframe();
+
     var m = id();
     for (var i = 0; i < wings.length; i++) {
         var wing = wings[i];
@@ -159,6 +174,7 @@ function render() {
 
         transform(wing.element, lm)
     }
+
     requestAnimationFrame(render);
 }
 
